@@ -1,19 +1,19 @@
 import os
-from pickletools import uint8
-import numpy as np
 from pathlib import Path
+from pickletools import uint8
+
+import numpy as np
 from pytorch_lightning.callbacks import BasePredictionWriter
-try: 
-    from pytorch_lightning.utilities.distributed import rank_zero_only 
+
+try:
+    from pytorch_lightning.utilities.distributed import rank_zero_only
 except ImportError:
-    from pytorch_lightning.utilities.rank_zero import rank_zero_only 
+    from pytorch_lightning.utilities.rank_zero import rank_zero_only
+
 from PIL import Image
 
 
-
-
 class PredictionWriter(BasePredictionWriter):
-
     def __init__(
         self,
         output_dir,
@@ -34,13 +34,17 @@ class PredictionWriter(BasePredictionWriter):
         dataloader_idx,
     ):
         preds, filenames = prediction["preds"], prediction["id"]
-        preds = preds.cpu().numpy().astype('uint8')  # Pass prediction on CPU
-        
-        for prediction, filename in zip(preds, filenames):
-            output_file = str(self.output_dir+'/'+filename.split('/')[-1].replace('IMG', 'PRED'))
-            Image.fromarray(prediction).save(output_file,  compression='tiff_lzw')
+        preds = preds.cpu().numpy().astype("uint8")  # Pass prediction on CPU
 
-    def on_predict_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+        for prediction, filename in zip(preds, filenames):
+            output_file = str(
+                self.output_dir + "/" + filename.split("/")[-1].replace("IMG", "PRED")
+            )
+            Image.fromarray(prediction).save(output_file, compression="tiff_lzw")
+
+    def on_predict_batch_end(
+        self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx
+    ):
         if not self.interval.on_batch:
             return
 

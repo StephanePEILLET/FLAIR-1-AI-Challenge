@@ -1,11 +1,10 @@
-from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
+from torch.utils.data import DataLoader
 
 from .dataset import Fit_Dataset, Predict_Dataset
 
 
 class OCS_DataModule(LightningDataModule):
-
     def __init__(
         self,
         dict_train=None,
@@ -17,7 +16,7 @@ class OCS_DataModule(LightningDataModule):
         num_classes=13,
         num_channels=5,
         use_metadata=True,
-        use_augmentations=True
+        use_augmentations=True,
     ):
         super().__init__()
         self.dict_train = dict_train
@@ -42,20 +41,20 @@ class OCS_DataModule(LightningDataModule):
                 dict_files=self.dict_train,
                 num_classes=self.num_classes,
                 use_metadata=self.use_metadata,
-                use_augmentations=self.use_augmentations
+                use_augmentations=self.use_augmentations,
             )
 
             self.val_dataset = Fit_Dataset(
                 dict_files=self.dict_val,
                 num_classes=self.num_classes,
-                use_metadata=self.use_metadata
+                use_metadata=self.use_metadata,
             )
 
         elif stage == "predict":
             self.pred_dataset = Predict_Dataset(
                 dict_files=self.dict_test,
                 num_classes=self.num_classes,
-                use_metadata=self.use_metadata
+                use_metadata=self.use_metadata,
             )
 
     def train_dataloader(self):
@@ -75,11 +74,11 @@ class OCS_DataModule(LightningDataModule):
             num_workers=self.num_workers,
             drop_last=self.drop_last,
         )
-    
+
     def predict_dataloader(self):
         return DataLoader(
             dataset=self.pred_dataset,
-            batch_size=1, 
+            batch_size=1,
             shuffle=False,
             num_workers=self.num_workers,
             drop_last=self.drop_last,
