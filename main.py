@@ -97,16 +97,24 @@ def get_data_module(config, dict_train, dict_val, dict_test):
     return dm
 
 
-
-
 def get_segmentation_module(config):
     ## Define model and training parameters
-
     model = SMP_Unet_meta(
         n_channels=5,
         n_classes=config["num_classes"],
         use_metadata=config["use_metadata"],
     )
+
+    def forward_fn(model, batch, use_metadata=config["use_metadata"]):
+        mtd = batch["mtd"] if use_metadata else ""
+        logits = model(batch["img"], mtd)
+        return logits
+
+    def predict_step_fn(model, batch, use_metadata=config["use_metadata"]):
+        logits = forward_fn(model=model, batch=batch, use_metadata=use_metadata)
+        proba = torch.softmax(logits, dim=1)
+        batch["preds"] = torch.argmax(proba, dim=1)
+        return batch
 
     # from transformers import Mask2FormerForUniversalSegmentation      # Model mask2formers_swin_base_rgb
     # from transformers import MaskFormerImageProcessor    
@@ -117,7 +125,6 @@ def get_segmentation_module(config):
     #     id2label=ALAN_ID2LABEL,
     #     ignore_mismatched_sizes=True,
     # )
-
 
     if config["use_weights"] == True:
         with torch.no_grad():
@@ -142,14 +149,14 @@ def get_segmentation_module(config):
         criterion=criterion,
         optimizer=optimizer,
         scheduler=scheduler,
-        use_metadata=config["use_metadata"],
+        forward_fn=forward_fn,
+        predict_step_fn=predict_step_fn,
     )
     return seg_module
 
 
 def train_model(config, data_module, seg_module):
     ## Define callbacks
-
     ckpt_callback = ModelCheckpoint(
         monitor="val_loss",
         dirpath=os.path.join(out_dir, "checkpoints"),

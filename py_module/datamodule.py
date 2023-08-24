@@ -18,6 +18,7 @@ class OCS_DataModule(LightningDataModule):
         use_metadata=True,
         transform_train=None,
         transform_val=None,
+        collate_fn=None,
     ):
         super().__init__()
         self.dict_train = dict_train
@@ -33,6 +34,7 @@ class OCS_DataModule(LightningDataModule):
         self.use_metadata = use_metadata
         self.transform_train = transform_train
         self.transform_val = transform_val
+        self.collate_fn = collate_fn
 
     def prepare_data(self):
         pass
@@ -68,6 +70,7 @@ class OCS_DataModule(LightningDataModule):
             shuffle=True,
             num_workers=self.num_workers,
             drop_last=self.drop_last,
+            collate_fn=self.collate_fn,
         )
 
     def val_dataloader(self):
@@ -77,6 +80,7 @@ class OCS_DataModule(LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             drop_last=self.drop_last,
+            collate_fn=self.collate_fn,
         )
 
     def predict_dataloader(self):
@@ -86,4 +90,5 @@ class OCS_DataModule(LightningDataModule):
             shuffle=False,
             num_workers=self.num_workers,
             drop_last=self.drop_last,
+            collate_fn=self.collate_fn,
         )

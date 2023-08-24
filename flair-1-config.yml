@@ -7,7 +7,7 @@ data:
   path_labels_train: /home/dl/speillet/ocsge/flair1/data/subset/train #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair-one_train/train" 
   path_labels_test: /home/dl/speillet/ocsge/flair1/data/subset/flair_1_labels_test #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair_1_labels_test"
 
-  path_metadata_aerial: #"/home/dl/speillet/ocsge/flair1/FLAIR-1-AI-Challenge/data/flair-1_metadata_aerial.json"
+  path_metadata_aerial: "/home/dl/speillet/ocsge/flair1/FLAIR-1-AI-Challenge/data/flair-1_metadata_aerial.json"
   
 outputs:
 

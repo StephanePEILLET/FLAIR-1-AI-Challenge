@@ -10,7 +10,8 @@ class SegmentationTask(pl.LightningModule):
         num_classes,
         criterion,
         optimizer,
-        use_metadata=False,
+        forward_fn,
+        predict_step_fn,
         scheduler=None,
     ):
         super().__init__()
@@ -19,7 +20,9 @@ class SegmentationTask(pl.LightningModule):
         self.criterion = criterion
         self.optimizer = optimizer
         self.scheduler = scheduler
-        self.use_metadata = use_metadata
+        self.forward_fn = forward_fn
+        self.predict_step_fn = predict_step_fn
+
 
     def setup(self, stage=None):
         if stage == "fit":
@@ -51,16 +54,12 @@ class SegmentationTask(pl.LightningModule):
             )
             self.val_loss = MeanMetric()
 
-    def forward(self, input_im, input_met):
-        logits = self.model(input_im, input_met)
-        return logits
+    def forward(self, batch):
+        return self.forward_fn(model=self.model, batch=batch)
 
     def step(self, batch):
-        if self.use_metadata == True:
-            images, metadata, targets = batch["img"], batch["mtd"], batch["msk"]
-        else:
-            images, metadata, targets = batch["img"], "", batch["msk"]
-        logits = self.forward(images, metadata)
+        logits = self.forward(batch)
+        targets = batch["msk"]
         loss = self.criterion(logits, targets)
 
         with torch.no_grad():
@@ -141,13 +140,7 @@ class SegmentationTask(pl.LightningModule):
         self.val_metrics.reset()
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
-        if self.use_metadata == True:
-            logits = self.forward(batch["img"], batch["mtd"])
-        else:
-            logits = self.forward(batch["img"], "")
-        proba = torch.softmax(logits, dim=1)
-        batch["preds"] = torch.argmax(proba, dim=1)
-        return batch
+        return self.predict_step_fn(model=self.model, batch=batch)
 
     def configure_optimizers(self):
         if self.scheduler is not None:
