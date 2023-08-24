@@ -16,7 +16,8 @@ class OCS_DataModule(LightningDataModule):
         num_classes=13,
         num_channels=5,
         use_metadata=True,
-        use_augmentations=True,
+        transform_train=None,
+        transform_val=None,
     ):
         super().__init__()
         self.dict_train = dict_train
@@ -30,7 +31,8 @@ class OCS_DataModule(LightningDataModule):
         self.pred_dataset = None
         self.drop_last = drop_last
         self.use_metadata = use_metadata
-        self.use_augmentations = use_augmentations
+        self.transform_train = transform_train
+        self.transform_val = transform_val
 
     def prepare_data(self):
         pass
@@ -41,13 +43,14 @@ class OCS_DataModule(LightningDataModule):
                 dict_files=self.dict_train,
                 num_classes=self.num_classes,
                 use_metadata=self.use_metadata,
-                use_augmentations=self.use_augmentations,
+                transforms=self.transform_train,
             )
 
             self.val_dataset = Fit_Dataset(
                 dict_files=self.dict_val,
                 num_classes=self.num_classes,
                 use_metadata=self.use_metadata,
+                transforms=self.transform_val,
             )
 
         elif stage == "predict":
@@ -55,6 +58,7 @@ class OCS_DataModule(LightningDataModule):
                 dict_files=self.dict_test,
                 num_classes=self.num_classes,
                 use_metadata=self.use_metadata,
+                transforms=self.transform_val,
             )
 
     def train_dataloader(self):

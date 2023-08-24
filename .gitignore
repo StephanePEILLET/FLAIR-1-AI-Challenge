@@ -10,6 +10,7 @@ py_module/__pycache__/
 # Distribution / packaging
 .Python
 build/
+data/
 develop-eggs/
 dist/
 downloads/
@@ -17,6 +18,7 @@ eggs/
 .eggs/
 lib/
 lib64/
+outputs/
 parts/
 sdist/
 var/

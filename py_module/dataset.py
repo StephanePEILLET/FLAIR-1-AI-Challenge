@@ -6,6 +6,13 @@ import torch
 from skimage import img_as_float
 from torch.utils.data import Dataset
 
+from py_module.transforms import (
+    Compose,
+    CHW_to_HWC,
+    HWC_to_CHW,
+    ScaleImageToFloat,
+    ToTorchTensor,
+)
 
 class Fit_Dataset(Dataset):
     def __init__(
@@ -13,15 +20,21 @@ class Fit_Dataset(Dataset):
         dict_files,
         num_classes=13,
         use_metadata=True,
-        use_augmentations=None,
+        transforms=None,
     ):
         self.list_imgs = np.array(dict_files["IMG"])
         self.list_msks = np.array(dict_files["MSK"])
+        self.num_classes = num_classes
         self.use_metadata = use_metadata
         if use_metadata == True:
             self.list_metadata = np.array(dict_files["MTD"])
-        self.use_augmentations = use_augmentations
-        self.num_classes = num_classes
+        if transforms is None:
+            self.transforms = Compose([
+                ScaleImageToFloat(), 
+                ToTorchTensor(),
+            ])
+        else:
+            self.transforms = transforms
 
     def read_img(self, raster_file: str) -> np.ndarray:
         with rasterio.open(raster_file) as src_img:
@@ -40,46 +53,45 @@ class Fit_Dataset(Dataset):
         return len(self.list_imgs)
 
     def __getitem__(self, index):
-        image_file = self.list_imgs[index]
-        img = self.read_img(raster_file=image_file)
+        img = self.read_img(raster_file=self.list_imgs[index])
+        msk = self.read_msk(raster_file=self.list_msks[index])
 
-        mask_file = self.list_msks[index]
-        msk = self.read_msk(raster_file=mask_file)
-
-        if self.use_augmentations is not None:
-            sample = {
-                "image": img.swapaxes(0, 2).swapaxes(0, 1),
-                "mask": msk.swapaxes(0, 2).swapaxes(0, 1),
-            }
-            transformed_sample = self.use_augmentations(**sample)
-            img, msk = (
-                transformed_sample["image"].swapaxes(0, 2).swapaxes(1, 2).copy(),
-                transformed_sample["mask"].swapaxes(0, 2).swapaxes(1, 2).copy(),
-            )
-
-        img = img_as_float(img)
+        sample = {"image": img, "mask": msk}
+        transformed_sample = self.transforms(**sample)
+        batch = {
+            "img": transformed_sample["image"], 
+            "msk": transformed_sample["mask"],
+        }
 
         if self.use_metadata == True:
-            mtd = self.list_metadata[index]
-            return {
-                "img": torch.as_tensor(img, dtype=torch.float),
-                "mtd": torch.as_tensor(mtd, dtype=torch.float),
-                "msk": torch.as_tensor(msk, dtype=torch.float),
-            }
-        else:
-            return {
-                "img": torch.as_tensor(img, dtype=torch.float),
-                "msk": torch.as_tensor(msk, dtype=torch.float),
-            }
+            mtd = torch.as_tensor(self.list_metadata[index], dtype=torch.float)
+            batch["mtd"] = mtd
+
+        return batch
 
 
 class Predict_Dataset(Dataset):
-    def __init__(self, dict_files, num_classes=13, use_metadata=True):
+    def __init__(
+            self, 
+            dict_files, 
+            num_classes=13, 
+            use_metadata=True,
+            transforms=None,    
+        ):
         self.list_imgs = np.array(dict_files["IMG"])
         self.num_classes = num_classes
         self.use_metadata = use_metadata
+
         if use_metadata == True:
             self.list_metadata = np.array(dict_files["MTD"])
+        
+        if transforms is None:
+            self.transforms = Compose([
+                ScaleImageToFloat(img_only=True), 
+                ToTorchTensor(img_only=True),
+            ])
+        else:
+            self.transforms = transforms
 
     def read_img(self, raster_file: str) -> np.ndarray:
         with rasterio.open(raster_file) as src_img:
@@ -92,17 +104,13 @@ class Predict_Dataset(Dataset):
     def __getitem__(self, index):
         image_file = self.list_imgs[index]
         img = self.read_img(raster_file=image_file)
-        img = img_as_float(img)
-
+        sample = {"image": img}
+        transformed_sample = self.transforms(**sample)
+        batch = {
+            "img": transformed_sample["image"], 
+             "id": "/".join(image_file.split("/")[-4:]),
+        }
         if self.use_metadata == True:
-            mtd = self.list_metadata[index]
-            return {
-                "img": torch.as_tensor(img, dtype=torch.float),
-                "mtd": torch.as_tensor(mtd, dtype=torch.float),
-                "id": "/".join(image_file.split("/")[-4:]),
-            }
-        else:
-            return {
-                "img": torch.as_tensor(img, dtype=torch.float),
-                "id": "/".join(image_file.split("/")[-4:]),
-            }
+            mtd = torch.as_tensor(self.list_metadata[index], dtype=torch.float)
+            batch["mtd"] = mtd
+        return batch

@@ -1,18 +1,18 @@
 #### DATA PATHS
 data:
 
-  path_aerial_train: ""  #e.g.,  ./flair_aerial_train/ or flair_1_toy_aerial_train/
-  path_aerial_test:  ""  #e.g., ./flair_1_aerial_test/ or flair_1_toy_aerial_test/
+  path_aerial_train: /home/dl/speillet/ocsge/flair1/data/subset/train #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair-one_train/train"  
+  path_aerial_test: /home/dl/speillet/ocsge/flair1/data/subset/flair_1_aerial_test #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair_1_aerial_test"  
   
-  path_labels_train: ""  #e.g., ./flair_labels_train or flair_1_toy_labels_train/
-  path_labels_test:  "" #e.g.,  ./flair_1_labels_test or flair_1_toy_labels_test/
+  path_labels_train: /home/dl/speillet/ocsge/flair1/data/subset/train #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair-one_train/train" 
+  path_labels_test: /home/dl/speillet/ocsge/flair1/data/subset/flair_1_labels_test #"/home/dl/speillet/ocsge/flair1/data/data_flair-one/flair_1_labels_test"
 
-  path_metadata_aerial: "./flair-1_metadata_aerial.json"
+  path_metadata_aerial: #"/home/dl/speillet/ocsge/flair1/FLAIR-1-AI-Challenge/data/flair-1_metadata_aerial.json"
   
 outputs:
 
-  out_folder: "" 
-  out_model_name: ""
+  out_folder: "/home/dl/speillet/ocsge/flair1/FLAIR-1-AI-Challenge/outputs" 
+  out_model_name: "FLAIR_debug.ckpt"
 
 
 num_classes: 13
@@ -21,12 +21,12 @@ num_classes: 13
 use_weights: True
 class_weights: [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0]
 use_metadata: False
-use_augmentation: False
+use_augmentation: True
 
 #### HYPERPARAMETERS
 batch_size: 2
 learning_rate: 0.02
-num_epochs: 3
+num_epochs: 2
 
 #### COMPUTATIONAL RESSOURCES
 accelerator: gpu # or cpu

@@ -32,17 +32,54 @@ from pytorch_lightning.callbacks.progress.tqdm_progress import TQDMProgressBar
 from pytorch_lightning.loggers import TensorBoardLogger
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 
+from py_module.transforms import (
+    Compose,
+    CHW_to_HWC,
+    HWC_to_CHW,
+    ScaleImageToFloat,
+    ToTorchTensor,
+)
+
 argParser = argparse.ArgumentParser()
 argParser.add_argument("--config_file", help="Path to the .yml config file")
 
 
 def get_data_module(config, dict_train, dict_val, dict_test):
     if config["use_augmentation"] == True:
-        transform_set = A.Compose(
-            [A.VerticalFlip(p=0.5), A.HorizontalFlip(p=0.5), A.RandomRotate90(p=0.5)]
-        )
+        transform_train = Compose([
+            CHW_to_HWC(),
+            A.VerticalFlip(p=0.5), 
+            A.HorizontalFlip(p=0.5),
+            A.RandomRotate90(p=0.5),
+            ScaleImageToFloat(), 
+            HWC_to_CHW(), 
+            ToTorchTensor(),
+        ])
+        transform_val = None
+
+    elif config["use_augmentation"] == "alan_mask2formers_swin_base_rgb":
+        MEAN = np.array([0.44050665, 0.45704361, 0.42254708]) 
+        STD = np.array([0.20264351, 0.1782405 , 0.17575739]) 
+
+        transform_train = Compose([
+            CHW_to_HWC(),
+            A.VerticalFlip(p=0.5),
+            A.HorizontalFlip(p=0.5),
+            A.RandomRotate90(p=0.5),
+            A.ColorJitter(),
+            A.RandomBrightnessContrast(),
+            A.Normalize(mean=MEAN, std=STD),
+            HWC_to_CHW(), 
+            ToTorchTensor(),
+        ])
+        transform_val= A.Compose([
+            A.Normalize(mean=MEAN, std=STD),
+            HWC_to_CHW(), 
+            ToTorchTensor(),
+        ])
     else:
-        transform_set = None
+        transform_train = None
+        transform_val = None
 
     dm = OCS_DataModule(
         dict_train=dict_train,
@@ -54,10 +91,12 @@ def get_data_module(config, dict_train, dict_val, dict_test):
         num_classes=config["num_classes"],
         num_channels=5,
         use_metadata=config["use_metadata"],
-        use_augmentations=transform_set,
+        transform_train=transform_train,
+        transform_val=transform_val,
     )
-
     return dm
+
+
 
 
 def get_segmentation_module(config):
@@ -68,6 +107,17 @@ def get_segmentation_module(config):
         n_classes=config["num_classes"],
         use_metadata=config["use_metadata"],
     )
+
+    # from transformers import Mask2FormerForUniversalSegmentation      # Model mask2formers_swin_base_rgb
+    # from transformers import MaskFormerImageProcessor    
+    # from py_module.constants import ALAN_ID2LABEL
+
+    # model = Mask2FormerForUniversalSegmentation.from_pretrained(
+    #     "facebook/mask2former-swin-base-IN21k-ade-semantic",
+    #     id2label=ALAN_ID2LABEL,
+    #     ignore_mismatched_sizes=True,
+    # )
+
 
     if config["use_weights"] == True:
         with torch.no_grad():
@@ -86,7 +136,6 @@ def get_segmentation_module(config):
         cooldown=4,
         min_lr=1e-7,
     )
-
     seg_module = SegmentationTask(
         model=model,
         num_classes=config["num_classes"],
@@ -95,7 +144,6 @@ def get_segmentation_module(config):
         scheduler=scheduler,
         use_metadata=config["use_metadata"],
     )
-
     return seg_module
 
 
@@ -197,17 +245,15 @@ if __name__ == "__main__":
     )
     print_recap(config, dict_train, dict_val, dict_test)
 
-    ## Define modules
+    # Define modules
 
     dm = get_data_module(config, dict_train, dict_val, dict_test)
     seg_module = get_segmentation_module(config)
 
     ## Train model
-
     train_model(config, dm, seg_module)
 
     ## Compute predictions
-
     predict(config, dm, seg_module)
 
     ## Compute mIoU over the predictions
