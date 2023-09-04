@@ -68,7 +68,6 @@ def launch_local_tests():
     # list_pipelines = list(PIPELINE_FACTORY.keys())
     list_pipelines = ["baseline"]
     for pipeline in list_pipelines:
-
         data = local_config.copy()
         data["pipeline"] = pipeline
 

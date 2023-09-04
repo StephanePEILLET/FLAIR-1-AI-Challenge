@@ -73,31 +73,34 @@ class Baseline():
 
 
     def set_step_fn(self):
+        
         def step_fn(
-                model, 
                 batch,
-                criterion,
+                object,
                 use_metadata=self.config["use_metadata"],
             ):
             mtd = batch["mtd"] if use_metadata else ""
-            logits = model(batch["img"], mtd)
+            logits = object.model(batch["img"], mtd)
             targets = batch["msk"]
-            loss = criterion(logits, targets)
+            loss = object.criterion(logits, targets)
             return loss
+        
         return step_fn
 
 
     def set_predict_step_fn(self):
+        
         def predict_step_fn(
-                model, 
                 batch,
+                object,
                 use_metadata=self.config["use_metadata"],
             ):
             mtd = batch["mtd"] if use_metadata else ""
-            logits = model(batch["img"], mtd)
+            logits = object.model(batch["img"], mtd)
             proba = torch.softmax(logits, dim=1)
             batch["preds"] = torch.argmax(proba, dim=1)
             return batch
+        
         return predict_step_fn
 
 

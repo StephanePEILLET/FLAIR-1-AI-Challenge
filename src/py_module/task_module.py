@@ -1,6 +1,6 @@
 import pytorch_lightning as pl
 import torch
-from torchmetrics import JaccardIndex, MeanMetric
+from torchmetrics import MeanMetric
 
 
 class SegmentationTask(pl.LightningModule):
@@ -36,8 +36,7 @@ class SegmentationTask(pl.LightningModule):
 
     def step(self, batch):
         return self.step_fn(
-            model=self.model,
-            criterion=self.criterion,
+            object=self,
             batch=batch,
         )
 
@@ -79,7 +78,7 @@ class SegmentationTask(pl.LightningModule):
 
     def predict_step(self, batch, batch_idx, dataloader_idx=0):
         return self.predict_step_fn(
-            model=self.model, 
+            object=self, 
             batch=batch
         )
 

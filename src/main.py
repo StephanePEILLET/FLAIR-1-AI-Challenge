@@ -76,7 +76,6 @@ def get_segmentation_module(
         components,
     ):
     optimizer = torch.optim.SGD(components["model"].parameters(), lr=config["learning_rate"])
-
     scheduler = ReduceLROnPlateau(
         optimizer=optimizer,
         mode="min",
@@ -85,6 +84,12 @@ def get_segmentation_module(
         cooldown=4,
         min_lr=1e-7,
     )
+
+    # Pop des clé/valeur dans components des valeurs ne concernant que le datamodule.
+    for key in ["collate_fn", "transforms"]:
+        if key in components.keys():
+            components.pop(key)
+
     seg_module = SegmentationTask(
         num_classes=config["num_classes"],
         optimizer=optimizer,

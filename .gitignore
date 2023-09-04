@@ -1,6 +1,11 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
-py_module/__pycache__/
+src/py_module/__pycache__/
+src/pipelines/__pycache__/
+src/tests/__pycache__/
+src/tests/logs/
+src/tests/outputs/
+
 *.py[cod]
 *$py.class
 
