@@ -184,9 +184,9 @@ def read_config(file_path):
         return yaml.safe_load(f)
 
 
-@rank_zero_only
+
 def step_loading(paths_data, use_metadata: bool) -> dict:
-    print("+" + "-" * 29 + "+", "   LOADING DATA   ", "+" + "-" * 29 + "+")
+    # print("+" + "-" * 29 + "+", "   LOADING DATA   ", "+" + "-" * 29 + "+")
     train, val, test = load_data(paths_data, use_metadata=use_metadata)
     return train, val, test
 

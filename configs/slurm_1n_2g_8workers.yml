@@ -1,0 +1,36 @@
+#### DATA PATHS
+data:
+  path_aerial_train: "/gpfsscratch/rech/tel/commun/FLAIR-DATA/flair_aerial_train"  #e.g.,  ./flair_aerial_train/ or flair_1_toy_aerial_train/
+  path_aerial_test:  "/gpfsscratch/rech/tel/commun/FLAIR-DATA/test-1/flair_1_aerial_test"  #e.g., ./flair_1_aerial_test/ or flair_1_toy_aerial_test/
+  path_labels_train: "/gpfsscratch/rech/tel/commun/FLAIR-DATA/flair_labels_train"  #e.g., ./flair_labels_train or flair_1_toy_labels_train/
+  path_labels_test:  "/gpfsscratch/rech/tel/commun/FLAIR-DATA/test-1/flair_1_labels_test" #e.g.,  ./flair_1_labels_test or flair_1_toy_labels_test/
+  path_metadata_aerial: "/gpfsscratch/rech/ofp/uug84ql/FLAIR/flair-one_metadata.json"
+
+outputs:
+  out_folder: "/gpfsssd/worksf/projects/rech/tel/uug84ql/outputs/"
+  out_model_name: "FLAIR_debug_1n_2g_8workers.ckpt"
+
+pipeline: "baseline"
+num_classes: 13
+
+#### TRAINING CONF
+use_weights: True
+class_weights: [1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,1.0,0.0]
+use_metadata: False
+use_augmentation: True
+
+#### HYPERPARAMETERS
+batch_size: 2
+learning_rate: 0.02
+num_epochs: 2
+
+#### COMPUTATIONAL RESSOURCES
+accelerator: gpu # or cpu
+num_nodes: 1
+gpus_per_node: 2
+strategy: "ddp" # null if only one GPU, else 'ddp'
+num_workers: 8
+
+#### PRINT PROGRESS
+enable_progress_bar: True
+progress_rate: 10

@@ -14,7 +14,7 @@ outputs:
   out_folder: "/home/dl/speillet/ocsge/flair1/FLAIR-1-AI-Challenge/outputs"
   out_model_name: "FLAIR_debug.ckpt"
 
-
+pipeline: "baseline"
 num_classes: 13
 
 #### TRAINING CONF
