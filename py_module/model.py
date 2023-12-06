@@ -4,9 +4,6 @@ import torch.nn.functional as F
 import segmentation_models_pytorch as smp
 
 
-
-
-
 class mtd_MLP(nn.Module):
     """ 
     Light MLP to encode metadata

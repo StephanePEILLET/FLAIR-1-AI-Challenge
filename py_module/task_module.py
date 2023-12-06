@@ -1,5 +1,6 @@
 import torch
-from torchmetrics import MeanMetric, JaccardIndex
+from torchmetrics.classification import MulticlassJaccardIndex
+from torchmetrics.aggregation import MeanMetric
 import pytorch_lightning as pl
 
 
@@ -22,32 +23,25 @@ class SegmentationTask(pl.LightningModule):
         self.scheduler = scheduler
         self.use_metadata=use_metadata
 
-
     def setup(self, stage=None):
         if stage == "fit":
             self.train_epoch_loss, self.val_epoch_loss = None, None
             self.train_epoch_metrics, self.val_epoch_metrics = None, None
 
-            self.train_metrics = JaccardIndex(
-                    task='multiclass',
+            self.train_metrics = MulticlassJaccardIndex(
                     num_classes=self.num_classes,
-                    absent_score=1.0,
-                    reduction='elementwise_mean')
-            self.val_metrics = JaccardIndex(
-                    task='multiclass',
+                    average='weighted')
+            self.val_metrics = MulticlassJaccardIndex(
                     num_classes=self.num_classes,
-                    absent_score=1.0,
-                    reduction='elementwise_mean')
+                    average='weighted')
             self.train_loss = MeanMetric()
             self.val_loss = MeanMetric()
 
         elif stage == "validate":
             self.val_epoch_loss, self.val_epoch_metrics = None, None
-            self.val_metrics = JaccardIndex(
-                    task='multiclass',
+            self.val_metrics = MulticlassJaccardIndex(
                     num_classes=self.num_classes,
-                    absent_score=1.0,
-                    reduction='elementwise_mean')
+                    average='weighted')
             self.val_loss = MeanMetric()
 
     def forward(self, input_im, input_met):
@@ -72,19 +66,11 @@ class SegmentationTask(pl.LightningModule):
 
     def training_step(self, batch, batch_idx):
         loss, preds, targets = self.step(batch)
-        return {"loss": loss, "preds": preds, "targets": targets}
-
-    def training_step_end(self, step_output):
-        loss, preds, targets = (
-            step_output["loss"].mean(),
-            step_output["preds"],
-            step_output["targets"]
-        )
         self.train_loss.update(loss)
         self.train_metrics(preds=preds, target=targets)
         return loss
 
-    def training_epoch_end(self, outputs):
+    def on_train_epoch_end(self):
         self.train_epoch_loss = self.train_loss.compute()
         self.train_epoch_metrics = self.train_metrics.compute()
         self.log(
@@ -101,19 +87,11 @@ class SegmentationTask(pl.LightningModule):
 
     def validation_step(self, batch, batch_idx):
         loss, preds, targets = self.step(batch)
-        return {"loss": loss, "preds": preds, "targets": targets}
-
-    def validation_step_end(self, step_output):
-        loss, preds, targets = (
-            step_output["loss"].mean(),
-            step_output["preds"],
-            step_output["targets"]
-        )
         self.val_loss.update(loss)
         self.val_metrics(preds=preds, target=targets)
         return loss
 
-    def validation_epoch_end(self, outputs):
+    def on_validation_epoch_end(self):
         self.val_epoch_loss = self.val_loss.compute()
         self.val_epoch_metrics = self.val_metrics.compute()
         self.log(

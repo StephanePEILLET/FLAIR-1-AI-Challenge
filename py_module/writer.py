@@ -3,13 +3,8 @@ from pickletools import uint8
 import numpy as np
 from pathlib import Path
 from pytorch_lightning.callbacks import BasePredictionWriter
-try: 
-    from pytorch_lightning.utilities.distributed import rank_zero_only 
-except ImportError:
-    from pytorch_lightning.utilities.rank_zero import rank_zero_only 
+from pytorch_lightning.utilities.rank_zero import rank_zero_only 
 from PIL import Image
-
-
 
 
 class PredictionWriter(BasePredictionWriter):
@@ -40,11 +35,18 @@ class PredictionWriter(BasePredictionWriter):
             output_file = str(self.output_dir+'/'+filename.split('/')[-1].replace('IMG', 'PRED'))
             Image.fromarray(prediction).save(output_file,  compression='tiff_lzw')
 
-    def on_predict_batch_end(self, trainer, pl_module, outputs, batch, batch_idx, dataloader_idx):
+    def on_predict_batch_end(
+            self, 
+            trainer, 
+            pl_module, 
+            outputs, 
+            batch, 
+            batch_idx, 
+            dataloader_idx = 0):
         if not self.interval.on_batch:
             return
 
-        batch_indices = trainer.predict_loop.epoch_loop.current_batch_indices
+        batch_indices = trainer.predict_loop.current_batch_indices
         self.write_on_batch_end(
             trainer, pl_module, outputs, batch_indices, batch, batch_idx, dataloader_idx
         )

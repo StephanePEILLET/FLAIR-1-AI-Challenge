@@ -7,10 +7,8 @@ import random
 from random import shuffle
 import re
 import yaml
-try:
-  from pytorch_lightning.utilities.distributed import rank_zero_only
-except ImportError:
-  from pytorch_lightning.utilities.rank_zero import rank_zero_only  
+from pytorch_lightning.utilities.rank_zero import rank_zero_only  
+
 
 def load_data(paths_data, val_percent=0.8, use_metadata=True):
     
