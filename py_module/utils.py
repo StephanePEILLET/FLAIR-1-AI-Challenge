@@ -110,8 +110,7 @@ def load_data(paths_data, val_percent=0.8, use_metadata=True):
 def read_config(file_path):
     with open(file_path, "r") as f:
         return yaml.safe_load(f)
-    
-@rank_zero_only
+
 def step_loading(paths_data, use_metadata: bool) -> dict:
     print('+'+'-'*29+'+', '   LOADING DATA   ', '+'+'-'*29+'+')
     train, val, test = load_data(paths_data, use_metadata=use_metadata)
